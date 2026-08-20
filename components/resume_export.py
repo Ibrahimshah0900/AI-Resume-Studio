@@ -2,19 +2,18 @@
 from __future__ import annotations
 import streamlit as st
 import uuid
-import time
-import tempfile
 from pathlib import Path
+import tempfile
+
 from utils.template_renderer import render_resume_html
 from utils.pdf_generator import generate_resume_pdf
 from utils.template_engine import get_template, DEFAULT_TEMPLATE_ID
+from utils.data_models import Resume
 
 def render_resume_export() -> None:
-    # Initialize unique download key for this session
-    if "download_key" not in st.session_state:
-        import uuid
-        st.session_state.download_key = str(uuid.uuid4())
-
+    """Render the resume export workflow."""
+    
+    st.markdown('<div class="section-title">📥 Export Resume</div>', unsafe_allow_html=True)
     st.write("Generate professional resumes in multiple formats using your selected template.")
 
     resume_data = st.session_state.resume_data
@@ -34,39 +33,19 @@ def render_resume_export() -> None:
     st.write("Your resume will be exported using this template.")
     st.divider()
 
-    # Export options
+    # Export format selection
     export_format = st.radio(
         "Select Export Format",
         ["📑 PDF", "📝 DOCX (Word)"],
         horizontal=True
     )
 
-    if export_format == "📄 HTML":
-        st.subheader("Export as HTML")
-        if st.button("Generate HTML", key="generate_html", type="primary"):
-            try:
-                with st.spinner("Generating HTML..."):
-                    html_content = render_resume_html(
-                        resume_data.model_dump(mode="json"),
-                        template_id=selected_template_id,
-                    )
-                    st.session_state.html_content = html_content
-                    st.success("HTML generated successfully!")
-            except Exception as e:
-                st.error(f"Error generating HTML: {e}")
-
-        if st.session_state.get("html_content"):
-            st.download_button(
-                label="📥 Download HTML Resume",
-                data=st.session_state.html_content,
-                file_name="resume.html",
-                mime="text/html",
-                key=f"download_html_{st.session_state.download_key}",
-            )
-
-    elif export_format == "📑 PDF":
-        st.subheader("Export as PDF")
-        if st.button("Generate PDF", key="generate_pdf", type="primary"):
+    # ----- PDF EXPORT -----
+    if export_format == "📑 PDF":
+        st.subheader("📑 Export as PDF")
+        st.write("Generate a professional PDF version of your resume.")
+        
+        if st.button("📄 Generate PDF", key="generate_pdf_btn", type="primary"):
             try:
                 with st.spinner("Generating PDF..."):
                     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
@@ -83,30 +62,32 @@ def render_resume_export() -> None:
                         st.session_state.pdf_ready = True
                         Path(pdf_path).unlink(missing_ok=True)
                         
-                    st.success("PDF generated successfully!")
+                    st.success("✅ PDF generated successfully!")
             except Exception as e:
-                st.error(f"Error generating PDF: {e}")
+                st.error(f"❌ Error generating PDF: {e}")
 
         if st.session_state.get("pdf_ready") and st.session_state.get("pdf_bytes"):
+            # Use a simple unique key
+            key_suffix = str(uuid.uuid4())[:8]
             st.download_button(
                 label="📥 Download PDF Resume",
                 data=st.session_state.pdf_bytes,
                 file_name="resume.pdf",
                 mime="application/pdf",
-                key=f"download_pdf_{st.session_state.download_key}_{len(st.session_state.get(\"pdf_bytes\", b\"\"))}",
+                key=f"download_pdf_{key_suffix}",
             )
 
+    # ----- DOCX EXPORT -----
     elif export_format == "📝 DOCX (Word)":
         st.subheader("📝 Export as Word Document")
         st.write("Generate a fully formatted Word document with all your resume data.")
         
-        if st.button("📄 Generate DOCX", key="generate_docx", type="primary"):
+        if st.button("📄 Generate DOCX", key="generate_docx_btn", type="primary"):
             try:
                 from docx import Document
-                from docx.shared import Pt, Inches, RGBColor
+                from docx.shared import Pt
                 from docx.enum.text import WD_ALIGN_PARAGRAPH
                 from io import BytesIO
-                from utils.data_models import Resume
                 
                 # Convert Resume object to dict if needed
                 if isinstance(resume_data, Resume):
@@ -121,13 +102,13 @@ def render_resume_export() -> None:
                 style.font.name = 'Calibri'
                 style.font.size = Pt(11)
                 
-                # ----- HEADER: Name -----
+                # Header: Name
                 info = resume_dict.get("personal_info", {})
                 name = info.get("full_name", info.get("name", "Resume"))
                 title = doc.add_heading(name, 0)
                 title.alignment = WD_ALIGN_PARAGRAPH.CENTER
                 
-                # ----- Professional Title -----
+                # Professional Title
                 professional_title = info.get("professional_title", "")
                 if professional_title:
                     p = doc.add_paragraph(professional_title)
@@ -135,7 +116,7 @@ def render_resume_export() -> None:
                     p.runs[0].font.size = Pt(14)
                     p.runs[0].font.italic = True
                 
-                # ----- Contact Info -----
+                # Contact Info
                 contact_parts = []
                 if info.get("email"):
                     contact_parts.append(info.get("email"))
@@ -143,8 +124,6 @@ def render_resume_export() -> None:
                     contact_parts.append(info.get("phone"))
                 if info.get("location"):
                     contact_parts.append(info.get("location"))
-                if info.get("linkedin"):
-                    contact_parts.append(info.get("linkedin"))
                 
                 if contact_parts:
                     p = doc.add_paragraph(" | ".join(contact_parts))
@@ -153,19 +132,18 @@ def render_resume_export() -> None:
                 
                 doc.add_paragraph()
                 
-                # ----- SUMMARY -----
+                # Summary
                 summary = resume_dict.get("summary", "")
                 if summary:
                     doc.add_heading("Professional Summary", level=1)
                     doc.add_paragraph(summary)
                     doc.add_paragraph()
                 
-                # ----- EXPERIENCE -----
+                # Experience
                 experience = resume_dict.get("experience", [])
                 if experience:
                     doc.add_heading("Experience", level=1)
                     for exp in experience:
-                        # Job title and company
                         job_title = exp.get("job_title", "")
                         company = exp.get("company", "")
                         if job_title and company:
@@ -174,15 +152,13 @@ def render_resume_export() -> None:
                             run.bold = True
                             p.add_run(f" — {company}")
                         
-                        # Dates
                         start_date = exp.get("start_date", "")
                         end_date = exp.get("end_date", "")
                         if start_date or end_date:
-                            p = doc.add_paragraph(f"{start_date} - {end_date}", style='Normal')
+                            p = doc.add_paragraph(f"{start_date} - {end_date}")
                             p.runs[0].font.italic = True
                             p.runs[0].font.size = Pt(10)
                         
-                        # Bullet points
                         bullets = exp.get("bullet_points", [])
                         if bullets:
                             for bullet in bullets:
@@ -190,7 +166,7 @@ def render_resume_export() -> None:
                                     doc.add_paragraph(bullet, style='List Bullet')
                         doc.add_paragraph()
                 
-                # ----- EDUCATION -----
+                # Education
                 education = resume_dict.get("education", [])
                 if education:
                     doc.add_heading("Education", level=1)
@@ -206,27 +182,16 @@ def render_resume_export() -> None:
                         field = edu.get("field_of_study", "")
                         if field:
                             doc.add_paragraph(field)
-                        
-                        dates = []
-                        if edu.get("start_date"):
-                            dates.append(edu.get("start_date"))
-                        if edu.get("end_date"):
-                            dates.append(edu.get("end_date"))
-                        if dates:
-                            p = doc.add_paragraph(" - ".join(dates))
-                            p.runs[0].font.italic = True
-                            p.runs[0].font.size = Pt(10)
                         doc.add_paragraph()
                 
-                # ----- SKILLS -----
+                # Skills
                 skills = resume_dict.get("skills", [])
                 if skills:
                     doc.add_heading("Skills", level=1)
-                    # Add skills as a comma-separated list
                     doc.add_paragraph(", ".join(skills))
                     doc.add_paragraph()
                 
-                # ----- PROJECTS -----
+                # Projects
                 projects = resume_dict.get("projects", [])
                 if projects:
                     doc.add_heading("Projects", level=1)
@@ -245,7 +210,7 @@ def render_resume_export() -> None:
                             doc.add_paragraph(f"Technologies: {', '.join(techs)}")
                         doc.add_paragraph()
                 
-                # ----- CERTIFICATIONS -----
+                # Certifications
                 certifications = resume_dict.get("certifications", [])
                 if certifications:
                     doc.add_heading("Certifications", level=1)
@@ -255,7 +220,7 @@ def render_resume_export() -> None:
                             doc.add_paragraph(cert_name)
                     doc.add_paragraph()
                 
-                # ----- LANGUAGES -----
+                # Languages
                 languages = resume_dict.get("languages", [])
                 if languages:
                     doc.add_heading("Languages", level=1)
@@ -269,7 +234,7 @@ def render_resume_export() -> None:
                                 doc.add_paragraph(lang_name)
                     doc.add_paragraph()
                 
-                # ----- ACHIEVEMENTS -----
+                # Achievements
                 achievements = resume_dict.get("achievements", [])
                 if achievements:
                     doc.add_heading("Achievements", level=1)
@@ -285,84 +250,23 @@ def render_resume_export() -> None:
                 doc_bytes.seek(0)
                 
                 st.session_state.docx_bytes = doc_bytes.getvalue()
+                st.session_state.docx_ready = True
                 st.success("✅ DOCX generated successfully with all resume data!")
                 
             except ImportError:
-                st.error("❌ python-docx is not installed. Please install it with: pip install python-docx")
+                st.error("❌ python-docx is not installed. Please install it.")
             except Exception as e:
                 st.error(f"❌ Error generating DOCX: {e}")
-                import traceback
-                st.code(traceback.format_exc())
-        
-        if st.session_state.get("docx_bytes"):
+
+        if st.session_state.get("docx_ready") and st.session_state.get("docx_bytes"):
+            # Use a simple unique key
+            key_suffix = str(uuid.uuid4())[:8]
             st.download_button(
                 label="📥 Download DOCX Resume",
                 data=st.session_state.docx_bytes,
                 file_name="resume.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key=f"download_docx_{st.session_state.download_key}_{len(st.session_state.get(\"docx_bytes\", b\"\"))}",
-            )
-
-        if st.session_state.get("docx_bytes"):
-            st.download_button(
-                label="📥 Download DOCX Resume",
-                data=st.session_state.docx_bytes,
-                file_name="resume.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key=f"download_docx_{st.session_state.download_key}_{len(st.session_state.get(\"docx_bytes\", b\"\"))}",
-            )
-
-    elif export_format == "📋 TXT (ATS)":
-        st.subheader("Export as TXT (ATS-Optimized)")
-        
-        if st.button("Generate TXT", key="generate_txt", type="primary"):
-            try:
-                # Generate plain text version
-                lines = []
-                
-                info = resume_data.get("personal_info", {})
-                lines.append(info.get("full_name", ""))
-                lines.append(info.get("professional_title", ""))
-                lines.append(f"{info.get('email', '')} | {info.get('phone', '')} | {info.get('location', '')}")
-                lines.append("")
-                
-                if resume_data.get("summary"):
-                    lines.append("PROFESSIONAL SUMMARY")
-                    lines.append(resume_data.get("summary"))
-                    lines.append("")
-                
-                if resume_data.get("skills"):
-                    lines.append("SKILLS")
-                    lines.append(", ".join(resume_data.get("skills", [])))
-                    lines.append("")
-                
-                if resume_data.get("experience"):
-                    lines.append("EXPERIENCE")
-                    for exp in resume_data.get("experience", []):
-                        lines.append(f"{exp.get('job_title', '')} - {exp.get('company', '')}")
-                        for bullet in exp.get("bullet_points", []):
-                            lines.append(f"  • {bullet}")
-                        lines.append("")
-                
-                if resume_data.get("education"):
-                    lines.append("EDUCATION")
-                    for edu in resume_data.get("education", []):
-                        lines.append(f"{edu.get('degree', '')} - {edu.get('institution', '')}")
-                        lines.append("")
-                
-                txt_content = "\n".join(lines)
-                st.session_state.txt_content = txt_content
-                st.success("TXT generated successfully!")
-            except Exception as e:
-                st.error(f"Error generating TXT: {e}")
-
-        if st.session_state.get("txt_content"):
-            st.download_button(
-                label="📥 Download TXT Resume",
-                data=st.session_state.txt_content,
-                file_name="resume.txt",
-                mime="text/plain",
-                key=f"download_txt_{st.session_state.download_key}",
+                key=f"download_docx_{key_suffix}",
             )
 
     st.divider()
