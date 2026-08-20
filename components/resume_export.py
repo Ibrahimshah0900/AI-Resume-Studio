@@ -1,6 +1,7 @@
 
 from __future__ import annotations
 import streamlit as st
+import time
 import tempfile
 from pathlib import Path
 from utils.template_renderer import render_resume_html
@@ -55,7 +56,7 @@ def render_resume_export() -> None:
                 data=st.session_state.html_content,
                 file_name="resume.html",
                 mime="text/html",
-                key="download_html",
+                key=f"download_html_{int(time.time())}",
             )
 
     elif export_format == "📑 PDF":
@@ -87,7 +88,7 @@ def render_resume_export() -> None:
                 data=st.session_state.pdf_bytes,
                 file_name="resume.pdf",
                 mime="application/pdf",
-                key="download_pdf",
+                key=f"download_pdf_{int(time.time())}",
             )
 
     elif export_format == "📝 DOCX (Word)":
@@ -294,7 +295,7 @@ def render_resume_export() -> None:
                 data=st.session_state.docx_bytes,
                 file_name="resume.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key="download_docx",
+                key=f"download_docx_{int(time.time())}",
             )
 
         if st.session_state.get("docx_bytes"):
@@ -303,7 +304,7 @@ def render_resume_export() -> None:
                 data=st.session_state.docx_bytes,
                 file_name="resume.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key="download_docx",
+                key=f"download_docx_{int(time.time())}",
             )
 
     elif export_format == "📋 TXT (ATS)":
@@ -356,7 +357,7 @@ def render_resume_export() -> None:
                 data=st.session_state.txt_content,
                 file_name="resume.txt",
                 mime="text/plain",
-                key="download_txt",
+                key=f"download_txt_{int(time.time())}",
             )
 
     st.divider()
