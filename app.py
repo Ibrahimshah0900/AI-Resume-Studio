@@ -36,6 +36,24 @@ def render_sidebar() -> str:
     st.sidebar.title("📄 AI Resume Studio")
     st.sidebar.caption("Build, analyze, improve, and export professional resumes.")
 
+    # Get current page from session state or default to Dashboard
+    current_page = st.session_state.get("current_page", "Dashboard")
+    
+    # Map current_page to sidebar index
+    page_map = {
+        "Dashboard": "🏠 Dashboard",
+        "Create Resume": "📝 Resume Builder",
+        "Resume Analysis": "📊 Resume Analysis",
+        "Job Match": "🎯 Job Match",
+        "Resume Improvement": "✨ Resume Improvement",
+        "Templates": "🎨 Templates",
+        "Export": "📥 Export"
+    }
+    
+    # Get the display name for the current page
+    current_display = page_map.get(current_page, "🏠 Dashboard")
+    
+    # Create the radio with default value
     page = st.sidebar.radio(
         "Navigation",
         [
@@ -47,8 +65,23 @@ def render_sidebar() -> str:
             "🎨 Templates",
             "📥 Export",
         ],
+        index=["🏠 Dashboard", "📝 Resume Builder", "📊 Resume Analysis", "🎯 Job Match", "✨ Resume Improvement", "🎨 Templates", "📥 Export"].index(current_display) if current_display in ["🏠 Dashboard", "📝 Resume Builder", "📊 Resume Analysis", "🎯 Resume Improvement", "🎨 Templates", "📥 Export"] else 0,
         key="navigation_radio"
     )
+    
+    # Update session state when page changes
+    if page != current_display:
+        # Map back to page name
+        page_names = {
+            "🏠 Dashboard": "Dashboard",
+            "📝 Resume Builder": "Create Resume",
+            "📊 Resume Analysis": "Resume Analysis",
+            "🎯 Job Match": "Job Match",
+            "✨ Resume Improvement": "Resume Improvement",
+            "🎨 Templates": "Templates",
+            "📥 Export": "Export"
+        }
+        st.session_state.current_page = page_names.get(page, "Dashboard")
 
     st.sidebar.divider()
 
