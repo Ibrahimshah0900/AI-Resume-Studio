@@ -71,8 +71,7 @@ def render_dashboard() -> None:
     st.divider()
     st.subheader("My Resumes")
 
-        if not resumes:
-        st.info("📭 You don't have any saved resumes yet.")
+if not resumes:
         st.markdown("""
         <div style="text-align: center; padding: 40px 20px; background: #f8f9fa; border-radius: 12px; margin: 20px 0;">
             <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
