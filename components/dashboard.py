@@ -22,7 +22,19 @@ def render_dashboard() -> None:
 
     total_resumes = len(resumes)
     latest_name = resumes[0]["name"] if resumes else "No resumes yet"
-    active_completion = _get_completion_percentage(st.session_state.resume_data)
+    # Calculate completion properly
+    try:
+        resume_data = st.session_state.resume_data
+        if resume_data:
+            result = calculate_completion(resume_data)
+            if isinstance(result, dict):
+                active_completion = result.get("overall_percentage", 0)
+            else:
+                active_completion = 0
+        else:
+            active_completion = 0
+    except Exception:
+        active_completion = 0
 
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -37,7 +49,7 @@ def render_dashboard() -> None:
     if st.session_state.active_resume_id:
         st.subheader("Continue Editing")
         st.write(f"**{st.session_state.active_resume_name}**")
-        if st.button("Continue Editing", type="primary", use_container_width=True):
+        if st.button("✏️ Continue Editing", type="primary", use_container_width=True):
             st.session_state.current_page = "Create Resume"
             st.rerun()
 
@@ -93,12 +105,14 @@ def render_dashboard() -> None:
                 st.caption(f"Last edited: {resume['updated_at']}")
 
             with col2:
-                if st.button("Open", key=f"open_{resume_id}", use_container_width=True):
-                    if load_resume(resume_id):
+                if st.button("📂 Open", key=f"open_{resume_id}", use_container_width=True):
+                    success = load_resume(resume_id)
+                    if success:
                         st.session_state.current_page = "Create Resume"
+                        st.success(f"Loaded resume: {resume_name}")
                         st.rerun()
                     else:
-                        st.error("Unable to load this resume.")
+                        st.error(f"❌ Unable to load resume: {resume_name}")
 
             with col3:
                 if st.button("Duplicate", key=f"duplicate_{resume_id}", use_container_width=True):
