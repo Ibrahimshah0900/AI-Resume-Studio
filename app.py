@@ -69,8 +69,6 @@ def render_sidebar() -> str:
     return page
 
 def render_home() -> None:
-    st.markdown('<div class="main-title">AI Resume Studio</div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitle">Build smarter resumes with AI-powered analysis and optimization.</div>', unsafe_allow_html=True)
     render_dashboard()
 
 def render_builder() -> None:
