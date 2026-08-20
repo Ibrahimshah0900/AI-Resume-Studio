@@ -9,11 +9,10 @@ def _get_completion_percentage(resume_data) -> float:
     try:
         result = calculate_completion(resume_data)
         if isinstance(result, dict):
-        return float(result.get("overall_percentage", 0))
-    return float(result)
+            return float(result.get("overall_percentage", 0))
+        return float(result)
     except Exception:
-    return 0.0
-
+        return 0.0
 def render_dashboard() -> None:
     repository = st.session_state.repository
     resumes = repository.list_resumes()
