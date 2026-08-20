@@ -160,9 +160,9 @@ def render_auto_save_indicator() -> None:
     """Render auto-save indicator in sidebar."""
     status = get_unsaved_warning()
     if "Unsaved" in status:
-        st.sidebar.warning(status)
+        st.sidebar.warning("⚠️ " + status)
     else:
-        st.sidebar.success(status)
+        st.sidebar.info("✅ " + status)
     
     # Auto-save button
     if st.sidebar.button("💾 Save Now", use_container_width=True):
