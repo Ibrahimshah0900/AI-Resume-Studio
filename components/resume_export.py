@@ -93,7 +93,7 @@ def render_resume_export() -> None:
                 data=st.session_state.pdf_bytes,
                 file_name="resume.pdf",
                 mime="application/pdf",
-                key=f"download_pdf_{st.session_state.download_key}",
+                key=f"download_pdf_{st.session_state.download_key}_{len(st.session_state.get(\"pdf_bytes\", b\"\"))}",
             )
 
     elif export_format == "📝 DOCX (Word)":
@@ -300,7 +300,7 @@ def render_resume_export() -> None:
                 data=st.session_state.docx_bytes,
                 file_name="resume.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key=f"download_docx_{st.session_state.download_key}",
+                key=f"download_docx_{st.session_state.download_key}_{len(st.session_state.get(\"docx_bytes\", b\"\"))}",
             )
 
         if st.session_state.get("docx_bytes"):
@@ -309,7 +309,7 @@ def render_resume_export() -> None:
                 data=st.session_state.docx_bytes,
                 file_name="resume.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key=f"download_docx_{st.session_state.download_key}",
+                key=f"download_docx_{st.session_state.download_key}_{len(st.session_state.get(\"docx_bytes\", b\"\"))}",
             )
 
     elif export_format == "📋 TXT (ATS)":
