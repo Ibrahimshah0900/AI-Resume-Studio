@@ -5,6 +5,8 @@ import re
 from utils.job_matcher import match_resume_to_job
 from utils.resume_text import resume_to_text
 from utils.skill_extractor import extract_flat_skills
+from utils.data_models import Resume
+from utils.resume_builder_core import add_skill
 
 def render_job_match() -> None:
     st.markdown('<div class="section-title">🎯 Job Match</div>', unsafe_allow_html=True)
