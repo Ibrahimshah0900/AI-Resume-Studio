@@ -10,7 +10,11 @@ from utils.pdf_generator import generate_resume_pdf
 from utils.template_engine import get_template, DEFAULT_TEMPLATE_ID
 
 def render_resume_export() -> None:
-    st.markdown('<div class="section-title">📥 Export Resume</div>', unsafe_allow_html=True)
+    # Initialize unique download key for this session
+    if "download_key" not in st.session_state:
+        import uuid
+        st.session_state.download_key = str(uuid.uuid4())
+
     st.write("Generate professional resumes in multiple formats using your selected template.")
 
     resume_data = st.session_state.resume_data
