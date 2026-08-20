@@ -31,7 +31,7 @@ def render_resume_export() -> None:
     # Export options
     export_format = st.radio(
         "Select Export Format",
-        ["📄 HTML", "📑 PDF", "📝 DOCX (Word)", "📋 TXT (ATS)"],
+        ["📑 PDF", "📝 DOCX (Word)"],
         horizontal=True
     )
 
