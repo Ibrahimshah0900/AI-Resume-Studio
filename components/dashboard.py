@@ -17,176 +17,234 @@ def render_dashboard() -> None:
     repository = st.session_state.repository
     resumes = repository.list_resumes()
 
-    st.title("AI Resume Studio")
-    st.caption("Build, analyze, optimize, and manage your professional resumes.")
+    # Custom CSS for beautiful dashboard
+    st.markdown('''
+    <style>
+        .dashboard-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 0.2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .dashboard-subtitle {
+            color: #6b7280;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid #e5e7eb;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        .resume-card {
+            background: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        .resume-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 12px rgba(102, 126, 234, 0.15);
+        }
+        .resume-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+        .resume-meta {
+            color: #6b7280;
+            font-size: 0.85rem;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 16px;
+        }
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        .empty-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+        }
+        .empty-text {
+            color: #6b7280;
+            font-size: 1rem;
+        }
+        .continue-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 12px;
+            color: white;
+            text-align: center;
+        }
+        .continue-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        .continue-sub {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+    </style>
+    ''', unsafe_allow_html=True)
 
-    total_resumes = len(resumes)
-    latest_name = resumes[0]["name"] if resumes else "No resumes yet"
-    # Calculate completion properly
-    try:
-        resume_data = st.session_state.resume_data
-        if resume_data:
-            result = calculate_completion(resume_data)
-            if isinstance(result, dict):
-                active_completion = result.get("overall_percentage", 0)
-            else:
-                active_completion = 0
-        else:
-            active_completion = 0
-    except Exception:
-        active_completion = 0
+    # Header
+    st.markdown('<div class="dashboard-title">📄 Resume Studio</div>', unsafe_allow_html=True)
+    st.markdown('<div class="dashboard-subtitle">Create, manage, and export your professional resumes</div>', unsafe_allow_html=True)
 
+    # Statistics Row
     col1, col2, col3 = st.columns(3)
+    
+    total_resumes = len(resumes)
+    active_completion = _get_completion_percentage(st.session_state.resume_data)
+
     with col1:
-        st.metric("Resumes", total_resumes)
+        st.markdown(f'''
+        <div class="stat-card">
+            <div class="stat-number">{total_resumes}</div>
+            <div class="stat-label">📁 Saved Resumes</div>
+        </div>
+        ''', unsafe_allow_html=True)
+
     with col2:
-        st.metric("Current Completion", f"{active_completion:.0f}%")
+        st.markdown(f'''
+        <div class="stat-card">
+            <div class="stat-number">{int(active_completion)}%</div>
+            <div class="stat-label">📊 Current Completion</div>
+        </div>
+        ''', unsafe_allow_html=True)
+
     with col3:
-        st.metric("Last Edited", latest_name)
+        latest_name = resumes[0]["name"] if resumes else "No resumes"
+        st.markdown(f'''
+        <div class="stat-card">
+            <div class="stat-number" style="font-size: 1.2rem;">{latest_name[:20]}</div>
+            <div class="stat-label">📝 Last Edited</div>
+        </div>
+        ''', unsafe_allow_html=True)
 
     st.divider()
 
-    if st.session_state.active_resume_id:
-        st.subheader("Continue Editing")
-        st.write(f"**{st.session_state.active_resume_name}**")
-        if st.button("✏️ Continue Editing", type="primary", use_container_width=True):
-            st.session_state.current_page = "Create Resume"
-            st.rerun()
-
-    st.subheader("Create a Resume")
-
-    with st.container(border=True):
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            new_resume_title = st.text_input(
-                "Resume Title",
-                placeholder="Enter a title for your new resume...",
-                key="new_resume_title_input"
-            )
-        with col2:
-            if st.button(
-                "+ Create New Resume",
-                use_container_width=True,
-                type="primary"
-            ):
-                title = st.session_state.get("new_resume_title_input", "").strip()
-                if not title:
-                    st.warning("Please enter a title for your resume.")
-                else:
-                    create_new_resume(title)
-                    save_active_resume()
-                    st.session_state.current_page = "Create Resume"
-                    st.success(f"New resume '{title}' created!")
-                    st.rerun()
+    # Create New Resume Section
+    st.markdown("### ✨ Create New Resume")
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        new_title = st.text_input(
+            "Resume Title",
+            placeholder="Enter a title for your new resume...",
+            key="new_resume_title_input",
+            label_visibility="collapsed"
+        )
+    with col2:
+        if st.button("➕ Create", type="primary", use_container_width=True):
+            title = st.session_state.get("new_resume_title_input", "").strip()
+            if not title:
+                st.warning("⚠️ Please enter a title")
+            else:
+                create_new_resume(title)
+                save_active_resume()
+                st.session_state.current_page = "Create Resume"
+                st.success(f"✅ '{title}' created!")
+                st.rerun()
 
     st.divider()
-    st.subheader("My Resumes")
+
+    # My Resumes Section
+    st.markdown("### 📂 My Resumes")
 
     if not resumes:
-        st.info("No saved resumes yet.")
-        st.markdown("""
-        <div style="text-align: center; padding: 40px 20px; background: #f8f9fa; border-radius: 12px; margin: 20px 0;">
-            <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
-            <h3 style="color: #1a1a1a; margin-bottom: 8px;">No Resumes Yet</h3>
-            <p style="color: #6b7280; margin-bottom: 16px;">Create your first resume by clicking the button above</p>
+        st.markdown('''
+        <div class="empty-state">
+            <div class="empty-icon">📄</div>
+            <div class="empty-title">No Resumes Yet</div>
+            <div class="empty-text">Create your first resume by entering a title above and clicking "Create"</div>
         </div>
-        """, unsafe_allow_html=True)
-        return
+        ''', unsafe_allow_html=True)
+    else:
+        for resume in resumes:
+            resume_id = resume["id"]
+            resume_name = resume["name"]
 
-    for resume in resumes:
-        resume_id = resume["id"]
-        resume_name = resume["name"]
+            # Get completion for this resume
+            try:
+                resume_data = repository.get_resume(resume_id)
+                if resume_data:
+                    comp = calculate_completion(resume_data["data"])
+                    comp_percent = comp.get("overall_percentage", 0) if isinstance(comp, dict) else 0
+                else:
+                    comp_percent = 0
+            except:
+                comp_percent = 0
 
-        with st.container(border=True):
-            col1, col2, col3, col4 = st.columns([4, 1.5, 1.5, 1.5])
-
+            # Resume card with buttons
+            col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
             with col1:
-                st.markdown(f"### {resume_name}")
-                st.caption(f"Last edited: {resume['updated_at']}")
-
+                st.write(f"**{resume_name}**")
+                st.caption(f"📅 {resume['updated_at'][:16]} · 📊 {comp_percent}% complete")
             with col2:
-                if st.button("📂 Open", key=f"open_{resume_id}", use_container_width=True):
-                    success = load_resume(resume_id)
-                    if success:
+                if st.button("✏️ Edit", key=f"edit_{resume_id}", use_container_width=True):
+                    if load_resume(resume_id):
                         st.session_state.current_page = "Create Resume"
-                        st.success(f"Loaded resume: {resume_name}")
                         st.rerun()
                     else:
-                        st.error(f"❌ Unable to load resume: {resume_name}")
-
+                        st.error("Unable to load")
             with col3:
-                if st.button("Duplicate", key=f"duplicate_{resume_id}", use_container_width=True):
-                    source = repository.get_resume(resume_id)
-                    if source:
-                        new_id = str(uuid.uuid4())
-                        repository.save_resume(
-                            resume_id=new_id,
-                            name=f"{source['name']} - Copy",
-                            data=source["data"],
-                        )
-                        st.success("Resume duplicated.")
+                if st.button("📥 Download", key=f"dl_{resume_id}", use_container_width=True):
+                    if load_resume(resume_id):
+                        st.session_state.current_page = "Export"
                         st.rerun()
-
+                    else:
+                        st.error("Unable to load")
             with col4:
-                if st.button("Delete", key=f"delete_{resume_id}", use_container_width=True):
+                if st.button("🗑️ Delete", key=f"del_{resume_id}", use_container_width=True):
                     deleted = repository.delete_resume(resume_id)
                     if deleted:
                         if st.session_state.active_resume_id == resume_id:
                             st.session_state.active_resume_id = None
                             st.session_state.active_resume_name = "Untitled Resume"
-                        st.success("Resume deleted.")
+                        st.success("✅ Resume deleted!")
                         st.rerun()
                     else:
-                        st.error("Unable to delete this resume.")
+                        st.error("Unable to delete")
 
-    # Resume Draft Management
     st.divider()
-    st.subheader("Save Current Resume as Draft")
-
-    from utils.app_state import initialize_resume_manager, load_draft_into_state, delete_draft_from_manager, save_current_as_draft
-    manager = initialize_resume_manager()
-
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        draft_name = st.text_input("Draft Name", value=st.session_state.active_resume_name, key="draft_name_input")
-    with col2:
-        if st.button("Save Draft", type="primary", use_container_width=True):
-            name = draft_name.strip()
-            if not name:
-                st.warning("Please enter a draft name before saving.")
-            else:
-                if save_current_as_draft(name):
-                    st.success(f"Draft '{name}' saved!")
-                    st.rerun()
-                else:
-                    st.error("Failed to save draft")
-
-    drafts = manager.list_drafts()
-    if drafts:
-        st.subheader("My Saved Drafts")
-        for draft in drafts:
-            with st.container(border=True):
-                col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
-                with col1:
-                    st.write(f"**{draft['name']}**")
-                    st.caption(f"Updated: {draft['updated_at'][:10]} | v{draft.get('version', 1)}")
-                with col2:
-                    if st.button("Load", key=f"load_{draft['id']}", use_container_width=True):
-                        if load_draft_into_state(draft['id']):
-                            st.session_state.current_page = "Create Resume"
-                            st.success(f"Loaded '{draft['name']}'")
-                            st.rerun()
-                with col3:
-                    if st.button("Copy", key=f"copy_{draft['id']}", use_container_width=True):
-                        new_id = manager.duplicate_draft(draft['id'], f"{draft['name']} - Copy")
-                        if new_id:
-                            st.success("Draft duplicated!")
-                            st.rerun()
-                with col4:
-                    if st.button("Delete", key=f"del_{draft['id']}", use_container_width=True):
-                        if delete_draft_from_manager(draft['id']):
-                            if st.session_state.active_resume_id == draft['id']:
-                                st.session_state.active_resume_id = None
-                                st.session_state.active_resume_name = "Untitled Resume"
-                            st.success("Draft deleted!")
-                            st.rerun()
+    
+    # Continue Editing Section (if active resume exists)
+    if st.session_state.active_resume_id:
+        st.markdown(f'''
+        <div class="continue-card">
+            <div class="continue-title">✏️ Continue Editing</div>
+            <div class="continue-sub">{st.session_state.active_resume_name}</div>
+        </div>
+        ''', unsafe_allow_html=True)
+        
+        if st.button("📝 Continue Editing", type="primary", use_container_width=True):
+            st.session_state.current_page = "Create Resume"
+            st.rerun()
