@@ -98,21 +98,28 @@ def render_resume_export() -> None:
             try:
                 from docx import Document
                 from io import BytesIO
+                from utils.data_models import Resume
                 
                 doc = Document()
                 
+                # Ensure resume_data is a dictionary or convert from Resume object
+                if isinstance(resume_data, Resume):
+                    resume_dict = resume_data.model_dump()
+                else:
+                    resume_dict = resume_data
+                
                 # Add content
-                info = resume_data.get("personal_info", {})
-                doc.add_heading(info.get("full_name", "Resume"), 0)
+                info = resume_dict.get("personal_info", {})
+                doc.add_heading(info.get("full_name", info.get("name", "Resume")), 0)
                 doc.add_paragraph(info.get("professional_title", ""))
                 
-                if resume_data.get("summary"):
+                if resume_dict.get("summary"):
                     doc.add_heading("Professional Summary", level=1)
-                    doc.add_paragraph(resume_data.get("summary"))
+                    doc.add_paragraph(resume_dict.get("summary"))
                 
-                if resume_data.get("skills"):
+                if resume_dict.get("skills"):
                     doc.add_heading("Skills", level=1)
-                    doc.add_paragraph(", ".join(resume_data.get("skills", [])))
+                    doc.add_paragraph(", ".join(resume_dict.get("skills", [])))
                 
                 # Save to bytes
                 doc_bytes = BytesIO()
