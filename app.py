@@ -65,7 +65,7 @@ def render_sidebar() -> str:
             "🎨 Templates",
             "📥 Export",
         ],
-        index=["🏠 Dashboard", "📝 Resume Builder", "📊 Resume Analysis", "🎯 Job Match", "✨ Resume Improvement", "🎨 Templates", "📥 Export"].index(current_display) if current_display in ["🏠 Dashboard", "📝 Resume Builder", "📊 Resume Analysis", "🎯 Resume Improvement", "🎨 Templates", "📥 Export"] else 0,
+        index=["🏠 Dashboard", "📝 Resume Builder", "📊 Resume Analysis", "🎯 Job Match", "✨ Resume Improvement", "🎨 Templates", "📥 Export"].index(current_display) if current_display in ["🏠 Dashboard", "📝 Resume Builder", "📊 Resume Analysis", "🎯 Job Match", "✨ Resume Improvement", "🎨 Templates", "📥 Export"] else 0,
         key="navigation_radio"
     )
     
@@ -82,7 +82,7 @@ def render_sidebar() -> str:
             "📥 Export": "Export"
         }
         st.session_state.current_page = page_names.get(page, "Dashboard")
-
+    
     st.sidebar.divider()
 
     # Auto-save indicator
@@ -100,7 +100,6 @@ def render_sidebar() -> str:
     st.sidebar.caption("Modular Resume Intelligence Platform")
 
     return page
-
 def render_home() -> None:
     render_dashboard()
 
