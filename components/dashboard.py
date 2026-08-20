@@ -9,10 +9,10 @@ def _get_completion_percentage(resume_data) -> float:
     try:
         result = calculate_completion(resume_data)
         if isinstance(result, dict):
-            return float(result.get("overall_percentage", 0))
-        return float(result)
+        return float(result.get("overall_percentage", 0))
+    return float(result)
     except Exception:
-        return 0.0
+    return 0.0
 
 def render_dashboard() -> None:
     repository = st.session_state.repository
@@ -71,7 +71,7 @@ def render_dashboard() -> None:
     st.divider()
     st.subheader("My Resumes")
 
-if not resumes:
+            if not resumes:
         st.markdown("""
         <div style="text-align: center; padding: 40px 20px; background: #f8f9fa; border-radius: 12px; margin: 20px 0;">
             <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
@@ -84,7 +84,7 @@ if not resumes:
             </div>
         </div>
         """, unsafe_allow_html=True)
-        return
+    return
 
     for resume in resumes:
         resume_id = resume["id"]
