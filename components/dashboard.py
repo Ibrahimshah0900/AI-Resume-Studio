@@ -43,13 +43,31 @@ def render_dashboard() -> None:
             st.rerun()
 
     st.subheader("Create a Resume")
-    if st.button("+ Create New Resume", use_container_width=True):
-        create_new_resume("Untitled Resume")
-        save_active_resume()
-        st.session_state.current_page = "Create Resume"
-        st.success("New resume created.")
-        st.rerun()
 
+    # Create resume with title prompt
+    with st.container(border=True):
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            new_resume_title = st.text_input(
+                "Resume Title",
+                placeholder="Enter a title for your new resume...",
+                key="new_resume_title_input"
+            )
+        with col2:
+            if st.button(
+                "+ Create New Resume",
+                use_container_width=True,
+                type="primary"
+            ):
+                title = st.session_state.get("new_resume_title_input", "").strip()
+                if not title:
+                    st.warning("⚠️ Please enter a title for your resume.")
+                else:
+                    create_new_resume(title)
+                    save_active_resume()
+                    st.session_state.current_page = "Create Resume"
+                    st.success(f"✅ New resume '{title}' created!")
+                    st.rerun()
     st.divider()
     st.subheader("My Resumes")
 
