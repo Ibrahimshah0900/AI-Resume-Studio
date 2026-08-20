@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables and secrets
+.env
+.env.*
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Large model files
+models/*.bin
+models/*.pt
+models/*.pth
+models/*.onnx
+
+# Large datasets
+large_data/
+
+# Temporary files
+*.log
+*.tmp

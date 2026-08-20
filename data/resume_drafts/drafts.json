@@ -1,0 +1,30 @@
+{
+  "4527e6cf-61f2-431b-8a56-206c313f478c": {
+    "id": "4527e6cf-61f2-431b-8a56-206c313f478c",
+    "name": "Untitled Resume - Copy",
+    "data": {
+      "personal_info": {
+        "full_name": "",
+        "professional_title": "",
+        "email": null,
+        "phone": "",
+        "location": "",
+        "linkedin": "",
+        "github": "",
+        "portfolio": ""
+      },
+      "summary": "",
+      "experience": [],
+      "education": [],
+      "skills": [],
+      "projects": [],
+      "certifications": [],
+      "languages": [],
+      "achievements": [],
+      "custom_sections": {}
+    },
+    "created_at": "2026-08-20T01:12:55.377261",
+    "updated_at": "2026-08-20T01:12:55.377282",
+    "version": 1
+  }
+}

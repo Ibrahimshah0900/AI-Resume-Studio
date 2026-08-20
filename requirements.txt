@@ -1,0 +1,15 @@
+pandas
+numpy
+pydantic
+scikit-learn
+spacy
+nltk
+sentence-transformers
+pymupdf
+python-docx
+opencv-python-headless
+pillow
+pytesseract
+easyocr
+reportlab
+streamlit
